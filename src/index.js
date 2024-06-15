@@ -23,6 +23,7 @@ const main = async () => {
     const element = await page.waitForSelector(loginSelector);
     await page.click(loginSelector);
 
+    // Fill login
     const inputUser = 'input[type="text"]';
     const inputPassword = 'input[type="password"]';
     const userName = "SpaceAquelino";
