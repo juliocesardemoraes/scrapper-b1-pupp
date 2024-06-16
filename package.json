@@ -1,6 +1,6 @@
 {
-  "name": "pupp",
-  "productName": "pupp",
+  "name": "b1-scrapper",
+  "productName": "b1-scrapper",
   "version": "1.0.0",
   "description": "My Electron application description",
   "main": "src/index.js",
@@ -11,26 +11,47 @@
     "publish": "electron-forge publish",
     "lint": "echo \"No linting configured\""
   },
-  "devDependencies": {
-    "@electron-forge/cli": "^7.4.0",
-    "@electron-forge/maker-deb": "^7.4.0",
-    "@electron-forge/maker-rpm": "^7.4.0",
-    "@electron-forge/maker-squirrel": "^7.4.0",
-    "@electron-forge/maker-zip": "^7.4.0",
-    "@electron-forge/plugin-auto-unpack-natives": "^7.4.0",
-    "@electron-forge/plugin-fuses": "^7.4.0",
-    "@electron/fuses": "^1.8.0",
-    "electron": "^31.0.1"
-  },
   "keywords": [],
-  "author": {
-    "name": "julio cesar",
-    "email": "jcmcf2012@gmail.com"
-  },
+  "author": "jc",
   "license": "MIT",
+  "config": {
+    "forge": {
+      "packagerConfig": {},
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": "tron_forge"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "darwin"
+          ]
+        },
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-rpm",
+          "config": {}
+        }
+      ]
+    }
+  },
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.1",
-    "puppeteer-core": "^22.11.0",
-    "puppeteer-in-electron": "^3.0.5"
+    "electron-squirrel-startup": "^1.0.0",
+    "playwright": "^1.44.1"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^6.0.0-beta.50",
+    "@electron-forge/maker-deb": "^6.0.0-beta.50",
+    "@electron-forge/maker-rpm": "^6.0.0-beta.50",
+    "@electron-forge/maker-squirrel": "^6.0.0-beta.50",
+    "@electron-forge/maker-zip": "^6.0.0-beta.50",
+    "devtron": "^1.4.0",
+    "electron": "^31.0.1"
   }
 }
