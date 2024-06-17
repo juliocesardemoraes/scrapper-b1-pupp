@@ -2,6 +2,8 @@ const playwright = require("playwright");
 const name = document.getElementById("name");
 const pass = document.getElementById("pass");
 const passBtn = document.getElementById("passBtn");
+const addMessageBtn = document.getElementById("addMessage");
+const modalCloseBtn = document.getElementById("modal-close-btn");
 let page = null;
 
 const startBtn = document.getElementById("startBtn");
@@ -49,7 +51,6 @@ startBtn.onclick = async (e) => {
       resp.url().includes("/api/Login_Authenticate") && resp.status() === 200
   );
   await responsePromise;
-  await page.waitForTimeout(2000);
 
   await page.goto("https://www.b1.bet/#/game/casinolive", {
     waitUntil: "networkidle",
@@ -63,27 +64,41 @@ startBtn.onclick = async (e) => {
   const src = await iframeHandle.getAttribute("src");
   await page.goto(src);
 
-  await page.waitForTimeout(5000);
-
   // Convert the XPath to a CSS selector
   const closeButtonSelector = "div.close-button.header__close-button";
 
   // Click the button using the CSS selector
+  await page.waitForSelector(closeButtonSelector);
   await page.click(closeButtonSelector);
 
-  const svgButtonSelector = "svg.close-button__icon";
-
+  const rouletteSelector =
+    "div.game-category__title--tgCXt:has-text('Roulette')";
   // Click the button using the CSS selector
-  await page.click(svgButtonSelector);
-  console.log("SAJUISJDHUASHJ");
+  //const svgButtonSelector = "svg.close-button__icon";
+  // await page.click(svgButtonSelector);
+
+  // .chat-input-container
+
+  await page.waitForSelector(rouletteSelector);
+  await page.click(rouletteSelector);
 };
 
-passBtn.onclick = async (e) => {
-  if (!page) return;
+// passBtn.onclick = async (e) => {
+//   if (page === null) return "nulo";
 
-  const inputName = name.value;
-  console.log(inputName);
-  const inputUser = 'input[type="text"]';
-  await page.waitForSelector(inputUser);
-  await page.fill(inputUser, inputName);
+//   const inputName = name.value;
+//   console.log(inputName);
+//   const inputUser = 'input[type="text"]';
+//   await page.waitForSelector(inputUser);
+//   await page.fill(inputUser, inputName);
+// };
+
+addMessageBtn.onclick = async (e) => {
+  const addMessageBtn = document.getElementById("message-modal");
+  addMessageBtn.classList.add("is-active");
+};
+
+modalCloseBtn.onclick = () => {
+  const addMessageBtn = document.getElementById("message-modal");
+  addMessageBtn.classList.remove("is-active");
 };

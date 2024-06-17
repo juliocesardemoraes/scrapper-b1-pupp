@@ -9,18 +9,47 @@
       href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css"
     />
     <link rel="stylesheet" href="index.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
     <script defer src="render.js"></script>
   </head>
   <body>
-    <h1>B1 scrapper</h1>
-
-    <button id="startBtn" class="button is-primary">Start</button>
+    <h1>SCRAPPER-B1</h1>
+    <span class="mt-1">Este é um scrapper feito para plataforma b1</span>
+    <div>
+      <button id="startBtn" class="button is-primary mt-2">
+        Rodar scrapper
+      </button>
+    </div>
 
     <div>
+      <div class="is-flex">
+        <h2>Mensagens automatizadas</h2>
+        <button id="addMessage" class="button is-primary">
+          Adicionar mensagem
+        </button>
+      </div>
+      <!-- 
       <h1>Preencha seu login e senha</h1>
       <input type="text" name="name" id="name" placeholder="name" />
       <input type="text" name="pass" id="pass" placeholder="password" />
       <button id="passBtn" class="button is-primary">Start</button>
+      -->
+    </div>
+    <div id="message-modal" class="modal">
+      <div class="modal-background"></div>
+      <div class="modal-content">
+        <!-- Any other Bulma elements you want -->
+      </div>
+      <button
+        id="modal-close-btn"
+        class="modal-close is-large"
+        aria-label="close"
+      ></button>
     </div>
   </body>
 </html>
