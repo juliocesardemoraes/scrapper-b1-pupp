@@ -3,12 +3,87 @@ const name = document.getElementById("name");
 const pass = document.getElementById("pass");
 const passBtn = document.getElementById("passBtn");
 const addMessageBtn = document.getElementById("addMessage");
+const sendChatMessagesBtn = document.getElementById("sendChatMessages");
 const modalCloseBtn = document.getElementById("modal-close-btn");
 let page = null;
+const arrayOfMessages = new Set([]);
+let editValue = "";
+let intervalBlas = null;
+const TIME_FOR_EACH_MESSAGE = 35;
+let messageLoop = false;
+
+const chatSelector = ".chat-input.chat-input-layout";
+const buttonSendChatMessage = "svg.chat-controls-button__icon--DVtUL";
 
 const startBtn = document.getElementById("startBtn");
+
+function getRandomValue(max) {
+  return Math.floor(Math.random() * max);
+}
+
+const sendMessageFunctionality = async (message) => {
+  if (message === "") {
+    return;
+  }
+  await page.waitForSelector(chatSelector);
+  await page.type(chatSelector, message);
+  await page.waitForSelector(buttonSendChatMessage);
+  await page.click(buttonSendChatMessage);
+};
+
+const getRandomMessage = () => {
+  const indexItem = getRandomValue(arrayOfMessages.size - 1);
+  let counter = 0;
+  let message = "";
+
+  arrayOfMessages.forEach((item) => {
+    if (counter === indexItem) {
+      message = item;
+    }
+    counter++;
+  });
+
+  return message;
+};
+
+async function startSendingMessages() {
+  messageLoop = !messageLoop;
+
+  if (messageLoop) {
+    sendChatMessagesBtn.innerText =
+      "Estamos enviando mensagens automáticas no momento";
+  } else if (messageLoop === false) {
+    sendChatMessagesBtn.innerText =
+      "Não estamos enviando mensagens automáticas no momento";
+  }
+
+  while (messageLoop) {
+    let message = getRandomMessage();
+    await sendMessageFunctionality(message);
+    await new Promise((resolve) =>
+      setTimeout(resolve, 1000 * TIME_FOR_EACH_MESSAGE)
+    );
+  }
+}
+
+const sendMessagesTimer = async () => {
+  if (!page) return;
+
+  if ((await page.isVisible(chatSelector, { timeout: 100 })) === false) {
+    alert("Entre em uma sala!");
+  }
+
+  if (arrayOfMessages.size === 0) return;
+
+  startSendingMessages();
+  message = "";
+};
+
+sendChatMessagesBtn.onclick = async (e) => {
+  await sendMessagesTimer();
+};
+
 startBtn.onclick = async (e) => {
-  console.log("ENTROUE");
   const url = "https://www.b1.bet/#/";
   const browserContext = await playwright.chromium.launchPersistentContext("", {
     headless: false,
@@ -81,6 +156,7 @@ startBtn.onclick = async (e) => {
 
   await page.waitForSelector(rouletteSelector);
   await page.click(rouletteSelector);
+  sendChatMessagesBtn.removeAttribute("disabled");
 };
 
 // passBtn.onclick = async (e) => {
@@ -93,6 +169,7 @@ startBtn.onclick = async (e) => {
 //   await page.fill(inputUser, inputName);
 // };
 
+//------PAGE HTML CONFIG------
 addMessageBtn.onclick = async (e) => {
   const addMessageBtn = document.getElementById("message-modal");
   addMessageBtn.classList.add("is-active");
@@ -102,3 +179,79 @@ modalCloseBtn.onclick = () => {
   const addMessageBtn = document.getElementById("message-modal");
   addMessageBtn.classList.remove("is-active");
 };
+
+const form = document.getElementById("create-message-form");
+const editForm = document.getElementById("edit-message-form");
+const messageList = document.getElementById("message-list");
+
+const addMessage = (value) => {
+  console.log("value", value);
+  return `<div id='card-${value}' class="card mt-4">
+          <header class="card-header">
+            <p class="card-header-title">Mensagem</p>
+          </header>
+          <div class="card-content">
+            <div class="content">
+              ${value}
+            </div>
+          </div>
+          <footer class="card-footer">
+            <button href="#" class="card-footer-item" onclick='editar("${value}")'>Editar</a>
+            <button href="#" class="card-footer-item" onclick='deletar("${value}")'>Deletar</a>
+          </footer>
+        </div>`;
+};
+
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const payload = new FormData(form);
+  const addMessageBtn = document.getElementById("message-modal");
+
+  if (editValue != "") {
+    //Editar
+    console.log("Editar");
+
+    for (item of payload) {
+      if (arrayOfMessages.has(editValue)) {
+        // Update set
+        arrayOfMessages.delete(editValue);
+        arrayOfMessages.add(item[1]);
+        // Remove card
+        const idCardToRemove = document.getElementById(`card-${editValue}`);
+        idCardToRemove.remove();
+        // Update html
+        messageList.innerHTML += addMessage(item[1]);
+        editValue = "";
+      }
+    }
+  } else {
+    // Adicionar
+    for (item of payload) {
+      if (arrayOfMessages.has(item[1])) break;
+      arrayOfMessages.add(item[1]);
+      messageList.innerHTML += addMessage(item[1]);
+    }
+  }
+
+  addMessageBtn.classList.remove("is-active");
+});
+
+const editar = (valor) => {
+  //const getItem = document.getElementById(`card-${valor}`);
+  editValue = valor;
+  const addMessageBtn = document.getElementById("message-modal");
+  addMessageBtn.classList.add("is-active");
+
+  // if (arrayOfMessages.has(valor)) {
+  //   arrayOfMessages.delete("hello");
+  //   arrayOfMessages.add("hello world");
+  // }
+};
+
+const deletar = (valor) => {
+  arrayOfMessages.delete(valor);
+  const idCardToRemove = document.getElementById(`card-${valor}`);
+  idCardToRemove.remove();
+};
+
+//------PAGE HTML CONFIG------

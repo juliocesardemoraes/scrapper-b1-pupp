@@ -40,10 +40,50 @@
       <button id="passBtn" class="button is-primary">Start</button>
       -->
     </div>
+    <button id="sendChatMessages" disabled="true" class="button is-secundary">
+      Enviar mensagens no chat: Aguardando scrapper
+    </button>
+    <div id="message-list"></div>
     <div id="message-modal" class="modal">
       <div class="modal-background"></div>
-      <div class="modal-content">
+      <div class="modal-content p-4">
         <!-- Any other Bulma elements you want -->
+        <form id="create-message-form" onsubmit="event.preventDefault();">
+          <input
+            class="input is-normal"
+            type="text"
+            name="message"
+            id="message"
+            placeholder="mensagem"
+          />
+          <button type="submit" class="button is-primary mt-2">
+            Adicionar mensagem
+          </button>
+        </form>
+      </div>
+      <button
+        id="modal-close-btn"
+        class="modal-close is-large"
+        aria-label="close"
+      ></button>
+    </div>
+
+    <div id="message-edit-modal" class="modal">
+      <div class="modal-background"></div>
+      <div class="modal-content p-4">
+        <!-- Any other Bulma elements you want -->
+        <form id="create-message-form">
+          <input
+            class="input is-normal"
+            type="text"
+            name="message"
+            id="message"
+            placeholder="mensagem"
+          />
+          <button type="submit" class="button is-primary mt-2">
+            Adicionar mensagem
+          </button>
+        </form>
       </div>
       <button
         id="modal-close-btn"
