@@ -1,25 +1,37 @@
-const playwright = require("playwright");
 const { firefox } = require("playwright-core");
+const { toast } = require("bulma-toast");
 
+// Playwright
+let page = null;
+let browser = null;
+
+// Global variables
+const arrayOfMessages = new Set([]);
+let editValue = "";
+const TIME_FOR_EACH_MESSAGE = 35;
+let messageLoop = false;
+let arrayOfHtmlItems = [];
+let isInsideRoom = false;
+
+// SELECTORS
+const chatSelector = ".chat-input.chat-input-layout";
+const buttonSendChatMessage = "svg.chat-controls-button__icon--DVtUL";
+const progressBar = document.getElementById("animate-value");
+
+// DOM ELEMENTS
 const name = document.getElementById("name");
 const pass = document.getElementById("pass");
 const passBtn = document.getElementById("passBtn");
 const addMessageBtn = document.getElementById("addMessage");
 const sendChatMessagesBtn = document.getElementById("sendChatMessages");
 const modalCloseBtn = document.getElementById("modal-close-btn");
-let page = null;
-const arrayOfMessages = new Set([]);
-let editValue = "";
-let intervalBlas = null;
-const TIME_FOR_EACH_MESSAGE = 35;
-let messageLoop = false;
-let arrayOfHtmlItems = [];
-let isInsideRoom = false;
-
-const chatSelector = ".chat-input.chat-input-layout";
-const buttonSendChatMessage = "svg.chat-controls-button__icon--DVtUL";
-
+const form = document.getElementById("create-message-form");
+const messageList = document.getElementById("message-list");
+let roomList = document.getElementById("room-list");
+const checkRoomsBtn = document.getElementById("checkRooms");
 const startBtn = document.getElementById("startBtn");
+const btnContainer = document.getElementById("btnContainer");
+const progressContainer = document.getElementById("progress-bar");
 
 function getRandomValue(max) {
   return Math.floor(Math.random() * max);
@@ -62,6 +74,7 @@ async function startSendingMessages() {
   }
 
   while (messageLoop) {
+    console.log("LOOP");
     let message = getRandomMessage();
     await sendMessageFunctionality(message);
     await new Promise((resolve) =>
@@ -73,11 +86,16 @@ async function startSendingMessages() {
 const sendMessagesTimer = async () => {
   if (!page) return;
 
-  if ((await page.isVisible(chatSelector, { timeout: 100 })) === false) {
-    alert("Entre em uma sala!");
-  }
+  await page.waitForSelector(chatSelector, { timeout: 12000 });
 
-  if (arrayOfMessages.size === 0) return;
+  if (arrayOfMessages.size === 0) {
+    toast({
+      message: "Crie uma mensagem antes de enviar mensagens",
+      type: "is-danger",
+      duration: 2000,
+    });
+    return;
+  }
 
   startSendingMessages();
   message = "";
@@ -87,115 +105,171 @@ sendChatMessagesBtn.onclick = async (e) => {
   await sendMessagesTimer();
 };
 
-startBtn.onclick = async (e) => {
-  if (page) {
-    page = null;
-    return;
-  }
-
-  const browser = await firefox.launch({
-    headless: true,
-    devtools: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
-  });
-  const context = await browser.newContext({
-    userAgent:
-      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
-    viewport: {
-      width: 1920,
-      height: 1080,
-    },
-  });
-
-  page = await context.newPage();
-  await page.goto("https://www.b1.bet/#/", { waitUntil: "domcontentloaded" });
-  console.log(await page.content());
-
-  const progressBar = document.getElementById("animate-value");
+const animateProgressBar = (minValue, maxValue) => {
   progressBar.animate(
     [
       {
-        width: "0px",
+        width: minValue,
       },
       {
-        width: "20px",
+        width: maxValue,
       },
     ],
     {
-      duration: 500,
+      duration: 300,
     }
   );
 
   setTimeout(() => {
-    progressBar.style.width = "20px";
-  }, 450);
+    progressBar.style.width = maxValue;
+  }, 250);
+};
 
-  // Select the button and perform actions
-  const buttonSelector =
-    'a.p-ripple.p-element.btn.btn-primary.ng-tns-c85-1:has-text("Login")';
+const shutdownPlaywright = async () => {
+  if (!browser || !page) return;
 
-  // Capture a screenshot for debugging
-  await page.screenshot({ path: "error_screenshot.png" });
-  await page.waitForSelector(buttonSelector, { timeout: 15000 });
-  await page.click(buttonSelector);
+  btnContainer.innerHTML = `<button id="startBtn" class="button is-primary mt-2" onclick='runScrapper()'>
+        Rodar scrapper
+      </button>`;
 
-  // Print the page title
-  console.log(await page.title());
-  // Selectors
-  const inputUser = 'input[type="text"]';
-  const inputPassword = 'input[type="password"]';
+  roomList.innerHTML = "";
 
-  // Selectors values
-  const name = "SpaceAquelino";
-  const pass = "@Aquelino88653361";
-  const ROULETTE_URL =
-    "https://www.b1.bet/#/game/casinolive?st=&stTp=1&p=480&t=1&g=SWS-playtech:RoletaBrasileria&lp=480";
+  await browser.close();
+  animateProgressBar("200px", "0px");
+  page = null;
+  sendChatMessagesBtn.setAttribute("disabled", "true");
+  checkRoomsBtn.setAttribute("disabled", "true");
+};
 
-  await page.waitForSelector(inputUser);
-  await page.fill(inputUser, name);
+const runScrapper = async (e) => {
+  try {
+    if (page) {
+      page = null;
+      return;
+    }
 
-  await page.waitForSelector(inputPassword);
-  await page.fill(inputPassword, pass);
+    btnContainer.innerHTML = "";
+    // Get first login button
+    animateProgressBar("0px", "20px");
 
-  await page.press(inputPassword, "Enter");
-  // await page.click("submit-button-selector"); // Replace with the actual submit button selector
+    toast({
+      message: "O site está rodando, aguarde alguns segundos",
+      type: "is-info",
+      duration: 2000,
+    });
 
-  const responsePromise = page.waitForResponse(
-    (resp) =>
-      resp.url().includes("/api/Login_Authenticate") && resp.status() === 200
-  );
-  await responsePromise;
+    browser = await firefox.launch({
+      headless: true,
+      devtools: false,
+      args: [
+        "--no-sandbox",
+        "--no-devtools",
+        "--disable-setuid-sandbox",
+        "--mute-audio",
+      ],
+      ignoreDefaultArgs: ["--mute-audio"],
+    });
+    const context = await browser.newContext({
+      userAgent:
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+      viewport: {
+        width: 1920,
+        height: 1080,
+      },
+    });
 
-  await page.goto("https://www.b1.bet/#/game/casinolive", {
-    waitUntil: "networkidle",
-  });
-  await page.goto(`${ROULETTE_URL}`, {
-    waitUntil: "domcontentloaded",
-  });
-  await page.waitForTimeout(12000);
+    page = await context.newPage();
+    await page.goto("https://www.b1.bet/#/", { waitUntil: "domcontentloaded" });
+    console.log(await page.content());
 
-  const iframeHandle = await page.$("#SOSWScriptWdget > iframe");
-  const src = await iframeHandle.getAttribute("src");
-  await page.goto(src);
+    // Select the button and perform actions
+    const buttonSelector =
+      'a.p-ripple.p-element.btn.btn-primary.ng-tns-c85-1:has-text("Login")';
 
-  // Convert the XPath to a CSS selector
-  const closeButtonSelector = "div.close-button.header__close-button";
+    // Capture a screenshot for debugging
+    await page.screenshot({ path: "error_screenshot.png" });
+    await page.waitForSelector(buttonSelector, { timeout: 15000 });
+    await page.click(buttonSelector);
 
-  // Click the button using the CSS selector
-  await page.waitForSelector(closeButtonSelector);
-  await page.click(closeButtonSelector);
+    const inputUser = 'input[type="text"]';
+    const inputPassword = 'input[type="password"]';
 
-  const rouletteSelector =
-    "div.game-category__title--tgCXt:has-text('Roulette')";
-  // Click the button using the CSS selector
-  //const svgButtonSelector = "svg.close-button__icon";
-  // await page.click(svgButtonSelector);
+    // Selectors values
+    const name = "SpaceAquelino";
+    const pass = "@Aquelino88653361";
+    const ROULETTE_URL =
+      "https://www.b1.bet/#/game/casinolive?st=&stTp=1&p=480&t=1&g=SWS-playtech:RoletaBrasileria&lp=480";
 
-  // .chat-input-container
+    await page.waitForSelector(inputUser);
+    await page.fill(inputUser, name);
 
-  await page.waitForSelector(rouletteSelector);
-  await page.click(rouletteSelector);
-  sendChatMessagesBtn.removeAttribute("disabled");
+    await page.waitForSelector(inputPassword);
+    await page.fill(inputPassword, pass);
+
+    await page.press(inputPassword, "Enter");
+    // await page.click("submit-button-selector"); // Replace with the actual submit button selector
+
+    const responsePromise = page.waitForResponse(
+      (resp) =>
+        resp.url().includes("/api/Login_Authenticate") && resp.status() === 200
+    );
+    await responsePromise;
+
+    // Login success
+    animateProgressBar("20px", "80px");
+
+    await page.goto("https://www.b1.bet/#/game/casinolive", {
+      waitUntil: "networkidle",
+    });
+    await page.goto(`${ROULETTE_URL}`, {
+      waitUntil: "domcontentloaded",
+    });
+    await page.waitForSelector("#SOSWScriptWdget > iframe", { timeout: 24000 });
+    animateProgressBar("80px", "100px");
+
+    const iframeHandle = await page.$("#SOSWScriptWdget > iframe");
+    const src = await iframeHandle.getAttribute("src");
+    await page.goto(src);
+
+    // Iframe link
+    animateProgressBar("100px", "120px");
+
+    // Convert the XPath to a CSS selector
+    const closeButtonSelector = "div.close-button.header__close-button";
+
+    // Click the button using the CSS selector
+    await page.waitForSelector(closeButtonSelector);
+    await page.click(closeButtonSelector);
+
+    const rouletteSelector =
+      "div.game-category__title--tgCXt:has-text('Roulette')";
+
+    // Roulette Selection
+    animateProgressBar("120px", "160px");
+
+    await page.waitForSelector(rouletteSelector);
+    await page.click(rouletteSelector);
+    sendChatMessagesBtn.removeAttribute("disabled");
+    checkRoomsBtn.removeAttribute("disabled");
+
+    // Iframe link
+    animateProgressBar("160px", "200px");
+    progressContainer.remove();
+    toast({
+      message: "Pronto, você já pode procurar as salas",
+      type: "is-success",
+      duration: 2000,
+    });
+  } catch (error) {
+    toast({
+      message: "Ocorreu algum erro, tente novamente",
+      type: "is-danger",
+      duration: 2000,
+    });
+
+    await shutdownPlaywright();
+    return;
+  }
 };
 
 // passBtn.onclick = async (e) => {
@@ -218,12 +292,6 @@ modalCloseBtn.onclick = () => {
   const addMessageBtn = document.getElementById("message-modal");
   addMessageBtn.classList.remove("is-active");
 };
-
-const form = document.getElementById("create-message-form");
-const editForm = document.getElementById("edit-message-form");
-const messageList = document.getElementById("message-list");
-let roomList = document.getElementById("room-list");
-const checkRoomsBtn = document.getElementById("checkRooms");
 
 const closeRoom = async () => {
   await page.click("svg.close-button__icon");

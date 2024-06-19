@@ -17,17 +17,29 @@
       rel="stylesheet"
     />
     <script defer src="render.js"></script>
+    <script src="https://unpkg.com/bulma-toast"></script>
   </head>
   <body>
     <h1>SCRAPPER-B1</h1>
     <span class="mt-1">Este é um scrapper feito para plataforma b1</span>
-    <div>
-      <button id="startBtn" class="button is-primary mt-2">
+    <div id="btnContainer">
+      <button
+        id="startBtn"
+        class="button is-primary mt-2"
+        onclick="runScrapper()"
+      >
         Rodar scrapper
       </button>
     </div>
+    <button
+      id="closeBtn"
+      class="button is-danger mt-2"
+      onclick="shutdownPlaywright()"
+    >
+      Fechar Scrapper
+    </button>
 
-    <div class="progress">
+    <div id="progress-bar" class="progress">
       <div id="animate-value" class="progress-value"></div>
     </div>
 
@@ -43,11 +55,13 @@
     <button id="sendChatMessages" disabled="true" class="button is-secundary">
       Enviar mensagens no chat: Aguardando scrapper
     </button>
-    <button id="checkRooms" class="button is-secundary">Buscar salas</button>
+    <button id="checkRooms" disabled="true" class="button is-secundary">
+      Buscar salas
+    </button>
     <div class="mb-4"></div>
     <div class="is-flex">
-      <div id="message-list is-half"></div>
-      <div id="room-list is-half"></div>
+      <div id="message-list" class="is-half"></div>
+      <div id="room-list" class="is-half"></div>
     </div>
     <div id="message-modal" class="modal">
       <div class="modal-background"></div>
