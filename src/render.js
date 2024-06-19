@@ -1,4 +1,6 @@
 const playwright = require("playwright");
+const { firefox } = require("playwright-core");
+
 const name = document.getElementById("name");
 const pass = document.getElementById("pass");
 const passBtn = document.getElementById("passBtn");
@@ -11,6 +13,8 @@ let editValue = "";
 let intervalBlas = null;
 const TIME_FOR_EACH_MESSAGE = 35;
 let messageLoop = false;
+let arrayOfHtmlItems = [];
+let isInsideRoom = false;
 
 const chatSelector = ".chat-input.chat-input-layout";
 const buttonSendChatMessage = "svg.chat-controls-button__icon--DVtUL";
@@ -84,19 +88,54 @@ sendChatMessagesBtn.onclick = async (e) => {
 };
 
 startBtn.onclick = async (e) => {
-  const url = "https://www.b1.bet/#/";
-  const browserContext = await playwright.chromium.launchPersistentContext("", {
-    headless: false,
-    args: [`--app=${url}`, "--window-size=1920,1080"],
+  if (page) {
+    page = null;
+    return;
+  }
+
+  const browser = await firefox.launch({
+    headless: true,
+    devtools: true,
+    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+  });
+  const context = await browser.newContext({
+    userAgent:
+      "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+    viewport: {
+      width: 1920,
+      height: 1080,
+    },
   });
 
-  [page] = browserContext.pages();
-  // Wait for the page to be ready
-  await page.waitForLoadState("domcontentloaded");
+  page = await context.newPage();
+  await page.goto("https://www.b1.bet/#/", { waitUntil: "domcontentloaded" });
+  console.log(await page.content());
+
+  const progressBar = document.getElementById("animate-value");
+  progressBar.animate(
+    [
+      {
+        width: "0px",
+      },
+      {
+        width: "20px",
+      },
+    ],
+    {
+      duration: 500,
+    }
+  );
+
+  setTimeout(() => {
+    progressBar.style.width = "20px";
+  }, 450);
 
   // Select the button and perform actions
   const buttonSelector =
     'a.p-ripple.p-element.btn.btn-primary.ng-tns-c85-1:has-text("Login")';
+
+  // Capture a screenshot for debugging
+  await page.screenshot({ path: "error_screenshot.png" });
   await page.waitForSelector(buttonSelector, { timeout: 15000 });
   await page.click(buttonSelector);
 
@@ -183,6 +222,69 @@ modalCloseBtn.onclick = () => {
 const form = document.getElementById("create-message-form");
 const editForm = document.getElementById("edit-message-form");
 const messageList = document.getElementById("message-list");
+let roomList = document.getElementById("room-list");
+const checkRoomsBtn = document.getElementById("checkRooms");
+
+const closeRoom = async () => {
+  await page.click("svg.close-button__icon");
+};
+
+checkRoomsBtn.onclick = async () => {
+  // Print out the outer HTML of each element
+  if (isInsideRoom === true) {
+    closeRoom();
+    isInsideRoom = false;
+  }
+
+  const elements = await page.$$("div.tables-grid__item--Jt0at");
+
+  let itemsIndex = 0;
+
+  // table--Ohpzf lobby-table-hover-4Gdj
+
+  roomList.innerHTML = "";
+  arrayOfHtmlItems = [];
+
+  for (const element of elements) {
+    const outerHTML = await element.evaluate((el) => el.outerHTML);
+    // Extract the child element with the data attribute 'data-automation-locator="lobby-table-name"'
+    const nameElement = await element.$(
+      'div[data-automation-locator="lobby-table-name"]'
+    );
+    let nameText = "";
+    if (nameElement) {
+      nameText = await nameElement.textContent();
+      console.log("Lobby Table Name:", nameText.trim());
+    } else {
+      console.log('No child element with class "lobby-table-name" found.');
+    }
+
+    const tableElement = await element.$(
+      "div.table--Ohpzf.lobby-table-hover-4Gdj"
+    );
+
+    if (tableElement) {
+      const tableOuterHTML = await tableElement.evaluate((el) => el.outerHTML);
+      console.log("Table Element:", tableOuterHTML);
+    } else {
+      console.log(
+        'No child element with classes "table--Ohpzf lobby-table-hover-4Gdj" found.'
+      );
+    }
+
+    arrayOfHtmlItems.push({ name: nameText, elementSelector: tableElement });
+    roomList.innerHTML += addRoom(nameText, itemsIndex, tableElement);
+    itemsIndex++;
+  }
+};
+
+const enterRoom = async (elementIndex) => {
+  isInsideRoom = true;
+  const tableElement = arrayOfHtmlItems[elementIndex].elementSelector;
+  await tableElement.click();
+  roomList.innerHTML =
+    "Sala selecionada, se deseja trocar clique no botão buscar salas";
+};
 
 const addMessage = (value) => {
   console.log("value", value);
@@ -200,6 +302,19 @@ const addMessage = (value) => {
             <button href="#" class="card-footer-item" onclick='deletar("${value}")'>Deletar</a>
           </footer>
         </div>`;
+};
+
+const addRoom = (roomText, itemsIndex, tableElement) => {
+  return `<div id='card-${roomText}' class="card mt-4" onclick='enterRoom("${itemsIndex}")'>
+                <header class="card-header">
+                  <p class="card-header-title">Sala</p>
+                </header>
+                <div class="card-content">
+                  <div class="content">
+                    ${roomText}
+                  </div>
+                </div>
+          </div>`;
 };
 
 form.addEventListener("submit", (e) => {

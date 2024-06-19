@@ -9,6 +9,7 @@
       href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css"
     />
     <link rel="stylesheet" href="index.css" />
+    <link rel="stylesheet" href="progress-bar.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -26,6 +27,10 @@
       </button>
     </div>
 
+    <div class="progress">
+      <div id="animate-value" class="progress-value"></div>
+    </div>
+
     <div>
       <div class="is-flex">
         <h2>Mensagens automatizadas</h2>
@@ -33,17 +38,17 @@
           Adicionar mensagem
         </button>
       </div>
-      <!-- 
-      <h1>Preencha seu login e senha</h1>
-      <input type="text" name="name" id="name" placeholder="name" />
-      <input type="text" name="pass" id="pass" placeholder="password" />
-      <button id="passBtn" class="button is-primary">Start</button>
-      -->
     </div>
+
     <button id="sendChatMessages" disabled="true" class="button is-secundary">
       Enviar mensagens no chat: Aguardando scrapper
     </button>
-    <div id="message-list"></div>
+    <button id="checkRooms" class="button is-secundary">Buscar salas</button>
+    <div class="mb-4"></div>
+    <div class="is-flex">
+      <div id="message-list is-half"></div>
+      <div id="room-list is-half"></div>
+    </div>
     <div id="message-modal" class="modal">
       <div class="modal-background"></div>
       <div class="modal-content p-4">
