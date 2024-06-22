@@ -32,12 +32,13 @@ const checkRoomsBtn = document.getElementById("checkRooms");
 const startBtn = document.getElementById("startBtn");
 const btnContainer = document.getElementById("btnContainer");
 const progressContainer = document.getElementById("progress-bar");
+const progressContainerMaster = document.getElementById("progress__container");
 
 function getRandomValue(max) {
   return Math.floor(Math.random() * max);
 }
 
-const sendMessageFunctionality = async (message) => {
+async function sendMessageFunctionality(message) {
   if (message === "") {
     return;
   }
@@ -45,14 +46,14 @@ const sendMessageFunctionality = async (message) => {
   await page.type(chatSelector, message);
   await page.waitForSelector(buttonSendChatMessage);
   await page.click(buttonSendChatMessage);
-};
+}
 
-const getRandomMessage = () => {
+function getRandomMessage() {
   const indexItem = getRandomValue(arrayOfMessages.size - 1);
   let counter = 0;
   let message = "";
 
-  arrayOfMessages.forEach((item) => {
+  arrayOfMessages.forEach(function (item) {
     if (counter === indexItem) {
       message = item;
     }
@@ -60,7 +61,7 @@ const getRandomMessage = () => {
   });
 
   return message;
-};
+}
 
 async function startSendingMessages() {
   messageLoop = !messageLoop;
@@ -74,7 +75,6 @@ async function startSendingMessages() {
   }
 
   while (messageLoop) {
-    console.log("LOOP");
     let message = getRandomMessage();
     await sendMessageFunctionality(message);
     await new Promise((resolve) =>
@@ -83,7 +83,7 @@ async function startSendingMessages() {
   }
 }
 
-const sendMessagesTimer = async () => {
+async function sendMessagesTimer() {
   if (!page) return;
 
   await page.waitForSelector(chatSelector, { timeout: 12000 });
@@ -99,13 +99,13 @@ const sendMessagesTimer = async () => {
 
   startSendingMessages();
   message = "";
-};
+}
 
-sendChatMessagesBtn.onclick = async (e) => {
+async function sendChatMessages(e) {
   await sendMessagesTimer();
-};
+}
 
-const animateProgressBar = (minValue, maxValue) => {
+function animateProgressBar(minValue, maxValue) {
   progressBar.animate(
     [
       {
@@ -123,9 +123,20 @@ const animateProgressBar = (minValue, maxValue) => {
   setTimeout(() => {
     progressBar.style.width = maxValue;
   }, 250);
-};
+}
 
-const shutdownPlaywright = async () => {
+// const createProgressBar = () => {
+//   progressContainerMaster.innerHTML = "";
+//   progressContainerMaster.innerHTML = `
+//     <div id="progress__container">
+//       <div id="progress-bar" class="progress">
+//         <div id="animate-value" class="progress-value"></div>
+//       </div>
+//     </div>
+//   `;
+// };
+
+async function shutdownPlaywright() {
   if (!browser || !page) return;
 
   btnContainer.innerHTML = `<button id="startBtn" class="button is-primary mt-2" onclick='runScrapper()'>
@@ -139,9 +150,9 @@ const shutdownPlaywright = async () => {
   page = null;
   sendChatMessagesBtn.setAttribute("disabled", "true");
   checkRoomsBtn.setAttribute("disabled", "true");
-};
+}
 
-const runScrapper = async (e) => {
+async function runScrapper(e) {
   try {
     if (page) {
       page = null;
@@ -159,7 +170,7 @@ const runScrapper = async (e) => {
     });
 
     browser = await firefox.launch({
-      headless: true,
+      headless: false,
       devtools: false,
       args: [
         "--no-sandbox",
@@ -167,7 +178,6 @@ const runScrapper = async (e) => {
         "--disable-setuid-sandbox",
         "--mute-audio",
       ],
-      ignoreDefaultArgs: ["--mute-audio"],
     });
     const context = await browser.newContext({
       userAgent:
@@ -180,7 +190,6 @@ const runScrapper = async (e) => {
 
     page = await context.newPage();
     await page.goto("https://www.b1.bet/#/", { waitUntil: "domcontentloaded" });
-    console.log(await page.content());
 
     // Select the button and perform actions
     const buttonSelector =
@@ -219,12 +228,14 @@ const runScrapper = async (e) => {
     animateProgressBar("20px", "80px");
 
     await page.goto("https://www.b1.bet/#/game/casinolive", {
-      waitUntil: "networkidle",
+      waitUntil: "domcontentloaded",
     });
+    await page.waitForTimeout(2000);
     await page.goto(`${ROULETTE_URL}`, {
       waitUntil: "domcontentloaded",
     });
-    await page.waitForSelector("#SOSWScriptWdget > iframe", { timeout: 24000 });
+    await page.waitForTimeout(2000);
+    await page.waitForSelector("#SOSWScriptWdget > iframe", { timeout: 60000 });
     animateProgressBar("80px", "100px");
 
     const iframeHandle = await page.$("#SOSWScriptWdget > iframe");
@@ -254,13 +265,15 @@ const runScrapper = async (e) => {
 
     // Iframe link
     animateProgressBar("160px", "200px");
-    progressContainer.remove();
+    animateProgressBar("200px", "0px");
+    // progressContainer.remove();
     toast({
       message: "Pronto, você já pode procurar as salas",
       type: "is-success",
       duration: 2000,
     });
   } catch (error) {
+    console.log("ERROR", error);
     toast({
       message: "Ocorreu algum erro, tente novamente",
       type: "is-danger",
@@ -270,52 +283,36 @@ const runScrapper = async (e) => {
     await shutdownPlaywright();
     return;
   }
-};
+}
 
-// passBtn.onclick = async (e) => {
-//   if (page === null) return "nulo";
-
-//   const inputName = name.value;
-//   console.log(inputName);
-//   const inputUser = 'input[type="text"]';
-//   await page.waitForSelector(inputUser);
-//   await page.fill(inputUser, inputName);
-// };
-
-//------PAGE HTML CONFIG------
-addMessageBtn.onclick = async (e) => {
+function openModalButton(e) {
   const addMessageBtn = document.getElementById("message-modal");
   addMessageBtn.classList.add("is-active");
-};
+}
 
-modalCloseBtn.onclick = () => {
+function closeModalButton() {
   const addMessageBtn = document.getElementById("message-modal");
   addMessageBtn.classList.remove("is-active");
-};
+}
 
-const closeRoom = async () => {
+async function closeRoom() {
   await page.click("svg.close-button__icon");
-};
+}
 
-checkRoomsBtn.onclick = async () => {
+async function checkRooms() {
   // Print out the outer HTML of each element
   if (isInsideRoom === true) {
     closeRoom();
     isInsideRoom = false;
+    return;
   }
 
   const elements = await page.$$("div.tables-grid__item--Jt0at");
-
   let itemsIndex = 0;
-
-  // table--Ohpzf lobby-table-hover-4Gdj
-
   roomList.innerHTML = "";
   arrayOfHtmlItems = [];
 
   for (const element of elements) {
-    const outerHTML = await element.evaluate((el) => el.outerHTML);
-    // Extract the child element with the data attribute 'data-automation-locator="lobby-table-name"'
     const nameElement = await element.$(
       'div[data-automation-locator="lobby-table-name"]'
     );
@@ -344,7 +341,7 @@ checkRoomsBtn.onclick = async () => {
     roomList.innerHTML += addRoom(nameText, itemsIndex, tableElement);
     itemsIndex++;
   }
-};
+}
 
 const enterRoom = async (elementIndex) => {
   isInsideRoom = true;
@@ -419,7 +416,7 @@ form.addEventListener("submit", (e) => {
   addMessageBtn.classList.remove("is-active");
 });
 
-const editar = (valor) => {
+function editar(valor) {
   //const getItem = document.getElementById(`card-${valor}`);
   editValue = valor;
   const addMessageBtn = document.getElementById("message-modal");
@@ -429,12 +426,12 @@ const editar = (valor) => {
   //   arrayOfMessages.delete("hello");
   //   arrayOfMessages.add("hello world");
   // }
-};
+}
 
-const deletar = (valor) => {
+function deletar(valor) {
   arrayOfMessages.delete(valor);
   const idCardToRemove = document.getElementById(`card-${valor}`);
   idCardToRemove.remove();
-};
+}
 
 //------PAGE HTML CONFIG------

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Electron App</title>
+
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css"
+    />
+    <link rel="stylesheet" href="index.css" />
+    <link rel="stylesheet" href="progress-bar.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+    <script defer src="output-obfuscated.js"></script>
+    <script src="https://unpkg.com/bulma-toast"></script>
+  </head>
+  <body>
+    <h1>SCRAPPER-B1</h1>
+    <span class="mt-1">Este é um scrapper feito para plataforma b1</span>
+    <div id="btnContainer">
+      <button
+        id="startBtn"
+        class="button is-primary mt-2"
+        onclick="runScrapper()"
+      >
+        Rodar scrapper
+      </button>
+    </div>
+    <button
+      id="closeBtn"
+      class="button is-danger mt-2"
+      onclick="shutdownPlaywright()"
+    >
+      Fechar Scrapper
+    </button>
+
+    <div id="progress__container">
+      <div id="progress-bar" class="progress">
+        <div id="animate-value" class="progress-value"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="is-flex">
+        <h2>Mensagens automatizadas</h2>
+        <button
+          id="addMessage"
+          onclick="openModalButton()"
+          class="button is-primary"
+        >
+          Adicionar mensagem
+        </button>
+      </div>
+    </div>
+
+    <button
+      id="sendChatMessages"
+      disabled="true"
+      class="button is-secundary"
+      onclick="sendChatMessages()"
+    >
+      Enviar mensagens no chat: Aguardando scrapper
+    </button>
+    <button
+      id="checkRooms"
+      disabled="true"
+      class="button is-secundary"
+      onclick="checkRooms()"
+    >
+      Buscar salas
+    </button>
+    <div class="mb-4"></div>
+    <div class="is-flex">
+      <div id="message-list" class="is-half"></div>
+      <div id="room-list" class="is-half"></div>
+    </div>
+    <div id="message-modal" class="modal">
+      <div class="modal-background"></div>
+      <div class="modal-content p-4">
+        <!-- Any other Bulma elements you want -->
+        <form id="create-message-form" onsubmit="event.preventDefault();">
+          <input
+            class="input is-normal"
+            type="text"
+            name="message"
+            id="message"
+            placeholder="mensagem"
+          />
+          <button type="submit" class="button is-primary mt-2">
+            Adicionar mensagem
+          </button>
+        </form>
+      </div>
+      <button
+        id="modal-close-btn"
+        class="modal-close is-large"
+        aria-label="close"
+        onclick="closeModalButton()"
+      ></button>
+    </div>
+
+    <div id="message-edit-modal" class="modal">
+      <div class="modal-background"></div>
+      <div class="modal-content p-4">
+        <!-- Any other Bulma elements you want -->
+        <form id="create-message-form">
+          <input
+            class="input is-normal"
+            type="text"
+            name="message"
+            id="message"
+            placeholder="mensagem"
+          />
+          <button type="submit" class="button is-primary mt-2">
+            Adicionar mensagem
+          </button>
+        </form>
+      </div>
+      <button
+        id="modal-close-btn"
+        class="modal-close is-large"
+        aria-label="close"
+        onclick="closeModalButton()"
+      ></button>
+    </div>
+  </body>
+</html>
