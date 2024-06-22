@@ -1,12 +1,110 @@
-function logar(event) {
+const { toast } = require("bulma-toast");
+const formularioLogin = document.getElementById("login__form");
+const formularioCadastro = document.getElementById("signup__form");
+const formularioLoginInput = document.getElementById("name__input");
+const formularioPasswordInput = document.getElementById("password__input");
+const URL = "http://localhost:4000";
+
+const getData = async () => {
+  const user = localStorage.getItem("user");
+  console.log("GETADATA", URL);
+
+  if (user) {
+    const userJson = JSON.parse(user);
+    formularioLoginInput.value = userJson?.name;
+    formularioPasswordInput.value = userJson?.password;
+  }
+
+  const requestOptions = {
+    method: "GET",
+    redirect: "follow",
+  };
+
+  const response = await fetch(`${URL}/playwrighturl`, requestOptions);
+  const authUser = await response.json();
+  localStorage.setItem("url", authUser.message);
+  console.log(authUser.message);
+};
+
+async function logar(event) {
   event.preventDefault();
-  const formulario = document.getElementById("login__form");
 
-  const formData = new FormData(formulario);
-  const nome = formData.get("name");
-  const email = formData.get("password");
-  console.log(nome);
-  console.log(email);
+  const formData = new FormData(formularioLogin);
+  const name = formData.get("name");
+  const password = formData.get("password");
 
-  //  window.location.href = "scrapper.html";
+  const requestOptions = {
+    method: "GET",
+    redirect: "follow",
+  };
+
+  const response = await fetch(
+    `${URL}/user/login?name=${name}&password=${password}`,
+    requestOptions
+  );
+  const authUser = await response.json();
+
+  if (response.status != 200) {
+    toast({
+      message: authUser.message,
+      type: "is-danger",
+      duration: 2000,
+    });
+  } else {
+    toast({
+      message: authUser.message,
+      type: "is-success",
+      duration: 2000,
+    });
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify({ name: name, password: password })
+    );
+
+    setTimeout(() => {
+      window.location.href = "scrapper.html";
+    }, 2000);
+  }
 }
+
+async function registrar(event) {
+  event.preventDefault();
+  const formData = new FormData(formularioCadastro);
+  const name = formData.get("name");
+  const password = formData.get("password");
+
+  const newUser = JSON.stringify({
+    name: name,
+    password: password,
+  });
+
+  const requestOptions = {
+    method: "POST",
+    body: newUser,
+    headers: {
+      "Content-Type": "application/json",
+    },
+    redirect: "follow",
+  };
+
+  const response = await fetch(`${URL}/user/create`, requestOptions);
+  const authUser = await response.json();
+
+  if (response.status != 201) {
+    toast({
+      message: authUser.message,
+      type: "is-danger",
+      duration: 2000,
+    });
+  } else {
+    toast({
+      message: authUser.message,
+      type: "is-success",
+      duration: 2000,
+    });
+  }
+}
+
+// SpaceAquelino
+// @Aquelino88653361

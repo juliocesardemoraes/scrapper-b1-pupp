@@ -46,8 +46,8 @@
       </div>
     </div>
 
-    <div>
-      <div class="is-flex">
+    <div class="mt-2">
+      <div class="is-flex w-100 max-w-md is-justify-content-space-between">
         <h2>Mensagens automatizadas</h2>
         <button
           id="addMessage"
@@ -59,24 +59,26 @@
       </div>
     </div>
 
-    <button
-      id="sendChatMessages"
-      disabled="true"
-      class="button is-secundary"
-      onclick="sendChatMessages()"
-    >
-      Enviar mensagens no chat: Aguardando scrapper
-    </button>
-    <button
-      id="checkRooms"
-      disabled="true"
-      class="button is-secundary"
-      onclick="checkRooms()"
-    >
-      Buscar salas
-    </button>
+    <div class="mt-2 is-flex max-w-md is-justify-content-space-between">
+      <button
+        id="sendChatMessages"
+        disabled="true"
+        class="button is-secundary"
+        onclick="sendChatMessages()"
+      >
+        Enviar mensagens no chat: Aguardando scrapper
+      </button>
+      <button
+        id="checkRooms"
+        disabled="true"
+        class="button is-secundary"
+        onclick="checkRooms()"
+      >
+        Buscar salas
+      </button>
+    </div>
     <div class="mb-4"></div>
-    <div class="is-flex">
+    <div class="is-flex max-w-md is-justify-content-space-between">
       <div id="message-list" class="is-half"></div>
       <div id="room-list" class="is-half"></div>
     </div>

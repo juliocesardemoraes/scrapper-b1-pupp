@@ -5,9 +5,9 @@
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
-    "start": "electron-forge start",
+    "start": "javascript-obfuscator src/render.js --output src/output-obfuscated.js --dead-code-injection false && electron-forge start",
     "package": "electron-forge package",
-    "make": "electron-forge make",
+    "make": "javascript-obfuscator src/render.js --output src/output-obfuscated.js --dead-code-injection false && electron-forge make",
     "publish": "electron-forge publish",
     "lint": "echo \"No linting configured\""
   },
@@ -16,7 +16,12 @@
   "license": "MIT",
   "config": {
     "forge": {
-      "packagerConfig": {},
+      "packagerConfig": {
+        "ignore": [
+          "\\/src/render.js$",
+          "\\./src/render.js$"
+        ]
+      },
       "makers": [
         {
           "name": "@electron-forge/maker-squirrel",

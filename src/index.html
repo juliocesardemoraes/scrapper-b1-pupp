@@ -19,9 +19,29 @@
     />
     <script src="https://unpkg.com/bulma-toast"></script>
   </head>
-  <body>
-    <a href="scrapper.html">Scrapper</a>
+  <body onload="getData()">
+    <h1>Login</h1>
     <form onsubmit="logar(event)" id="login__form">
+      <input
+        id="name__input"
+        class="input"
+        name="name"
+        type="text"
+        placeholder="Usuario"
+        required
+      />
+      <input
+        id="password__input"
+        class="input"
+        name="password"
+        type="password"
+        placeholder="Senha"
+        required
+      />
+      <button class="button is-primary">Login</button>
+    </form>
+    <h1>Cadastro</h1>
+    <form onsubmit="registrar(event)" id="signup__form">
       <input
         class="input"
         name="name"
@@ -36,8 +56,9 @@
         placeholder="Senha"
         required
       />
-      <button class="button is-primary">Login</button>
+      <button class="button is-primary">Cadastrar</button>
     </form>
+
     <script src="login.js"></script>
   </body>
 </html>

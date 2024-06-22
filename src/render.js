@@ -11,7 +11,6 @@ let editValue = "";
 const TIME_FOR_EACH_MESSAGE = 35;
 let messageLoop = false;
 let arrayOfHtmlItems = [];
-let isInsideRoom = false;
 
 // SELECTORS
 const chatSelector = ".chat-input.chat-input-layout";
@@ -19,20 +18,14 @@ const buttonSendChatMessage = "svg.chat-controls-button__icon--DVtUL";
 const progressBar = document.getElementById("animate-value");
 
 // DOM ELEMENTS
-const name = document.getElementById("name");
-const pass = document.getElementById("pass");
-const passBtn = document.getElementById("passBtn");
-const addMessageBtn = document.getElementById("addMessage");
 const sendChatMessagesBtn = document.getElementById("sendChatMessages");
-const modalCloseBtn = document.getElementById("modal-close-btn");
 const form = document.getElementById("create-message-form");
 const messageList = document.getElementById("message-list");
 let roomList = document.getElementById("room-list");
 const checkRoomsBtn = document.getElementById("checkRooms");
-const startBtn = document.getElementById("startBtn");
 const btnContainer = document.getElementById("btnContainer");
-const progressContainer = document.getElementById("progress-bar");
-const progressContainerMaster = document.getElementById("progress__container");
+
+const HEADLESS_BOOLEAN = false;
 
 function getRandomValue(max) {
   return Math.floor(Math.random() * max);
@@ -125,17 +118,6 @@ function animateProgressBar(minValue, maxValue) {
   }, 250);
 }
 
-// const createProgressBar = () => {
-//   progressContainerMaster.innerHTML = "";
-//   progressContainerMaster.innerHTML = `
-//     <div id="progress__container">
-//       <div id="progress-bar" class="progress">
-//         <div id="animate-value" class="progress-value"></div>
-//       </div>
-//     </div>
-//   `;
-// };
-
 async function shutdownPlaywright() {
   if (!browser || !page) return;
 
@@ -160,7 +142,6 @@ async function runScrapper(e) {
     }
 
     btnContainer.innerHTML = "";
-    // Get first login button
     animateProgressBar("0px", "20px");
 
     toast({
@@ -170,7 +151,7 @@ async function runScrapper(e) {
     });
 
     browser = await firefox.launch({
-      headless: false,
+      headless: HEADLESS_BOOLEAN,
       devtools: false,
       args: [
         "--no-sandbox",
@@ -191,11 +172,9 @@ async function runScrapper(e) {
     page = await context.newPage();
     await page.goto("https://www.b1.bet/#/", { waitUntil: "domcontentloaded" });
 
-    // Select the button and perform actions
     const buttonSelector =
       'a.p-ripple.p-element.btn.btn-primary.ng-tns-c85-1:has-text("Login")';
 
-    // Capture a screenshot for debugging
     await page.screenshot({ path: "error_screenshot.png" });
     await page.waitForSelector(buttonSelector, { timeout: 15000 });
     await page.click(buttonSelector);
@@ -203,20 +182,16 @@ async function runScrapper(e) {
     const inputUser = 'input[type="text"]';
     const inputPassword = 'input[type="password"]';
 
-    // Selectors values
-    const name = "SpaceAquelino";
-    const pass = "@Aquelino88653361";
+    const user = JSON.parse(localStorage.getItem("user"));
     const ROULETTE_URL =
       "https://www.b1.bet/#/game/casinolive?st=&stTp=1&p=480&t=1&g=SWS-playtech:RoletaBrasileria&lp=480";
 
     await page.waitForSelector(inputUser);
-    await page.fill(inputUser, name);
-
+    await page.fill(inputUser, user.name);
     await page.waitForSelector(inputPassword);
-    await page.fill(inputPassword, pass);
+    await page.fill(inputPassword, user.password);
 
     await page.press(inputPassword, "Enter");
-    // await page.click("submit-button-selector"); // Replace with the actual submit button selector
 
     const responsePromise = page.waitForResponse(
       (resp) =>
@@ -224,49 +199,77 @@ async function runScrapper(e) {
     );
     await responsePromise;
 
-    // Login success
+    // Define the selector for the element
+    const selector = ".Message--red .Message-body";
+
+    // Check if the element exists
+    const elementExists = await page.$(selector, { timeout: 12000 });
+
+    if (elementExists) {
+      toast({
+        message: "Conta invalida no b1bet",
+        type: "is-danger",
+        duration: 2000,
+      });
+
+      setTimeout(() => {
+        window.location.href = "index.html";
+      }, 2000);
+    }
+
     animateProgressBar("20px", "80px");
 
     await page.goto("https://www.b1.bet/#/game/casinolive", {
       waitUntil: "domcontentloaded",
     });
     await page.waitForTimeout(2000);
-    await page.goto(`${ROULETTE_URL}`, {
-      waitUntil: "domcontentloaded",
-    });
-    await page.waitForTimeout(2000);
-    await page.waitForSelector("#SOSWScriptWdget > iframe", { timeout: 60000 });
+
+    const MAX_RETRIES = 3;
+    let retries = 0;
+    let elementFound = false;
+    while (retries < MAX_RETRIES && !elementFound) {
+      try {
+        await page.goto(`${ROULETTE_URL}`, {
+          waitUntil: "domcontentloaded",
+        });
+        await page.waitForSelector("#SOSWScriptWdget > iframe", {
+          timeout: 12000,
+        });
+        elementFound = true;
+      } catch (e) {
+        retries++;
+        console.log(`Attempt ${retries} failed. Retrying...`);
+      }
+    }
+
     animateProgressBar("80px", "100px");
+
+    //Retrying https://www.b1.bet/?errorCode=6
 
     const iframeHandle = await page.$("#SOSWScriptWdget > iframe");
     const src = await iframeHandle.getAttribute("src");
+    console.log("SRC", src);
     await page.goto(src);
 
-    // Iframe link
     animateProgressBar("100px", "120px");
 
-    // Convert the XPath to a CSS selector
     const closeButtonSelector = "div.close-button.header__close-button";
-
-    // Click the button using the CSS selector
     await page.waitForSelector(closeButtonSelector);
     await page.click(closeButtonSelector);
 
     const rouletteSelector =
       "div.game-category__title--tgCXt:has-text('Roulette')";
 
-    // Roulette Selection
     animateProgressBar("120px", "160px");
 
     await page.waitForSelector(rouletteSelector);
     await page.click(rouletteSelector);
-    sendChatMessagesBtn.removeAttribute("disabled");
     checkRoomsBtn.removeAttribute("disabled");
+    // sendChatMessagesBtn.removeAttribute("disabled");
 
-    // Iframe link
     animateProgressBar("160px", "200px");
     animateProgressBar("200px", "0px");
-    // progressContainer.remove();
+
     toast({
       message: "Pronto, você já pode procurar as salas",
       type: "is-success",
@@ -299,9 +302,10 @@ async function closeRoom() {
   await page.click("svg.close-button__icon");
 }
 
+let isInsideRoom = false;
+
 async function checkRooms() {
-  // Print out the outer HTML of each element
-  if (isInsideRoom === true) {
+  if (isInsideRoom) {
     closeRoom();
     isInsideRoom = false;
     return;
@@ -312,30 +316,28 @@ async function checkRooms() {
   roomList.innerHTML = "";
   arrayOfHtmlItems = [];
 
-  for (const element of elements) {
-    const nameElement = await element.$(
+  for (let i = 0; i < elements.length; i++) {
+    const nameElement = await elements[i].$(
       'div[data-automation-locator="lobby-table-name"]'
     );
     let nameText = "";
     if (nameElement) {
       nameText = await nameElement.textContent();
-      console.log("Lobby Table Name:", nameText.trim());
     } else {
       console.log('No child element with class "lobby-table-name" found.');
     }
 
-    const tableElement = await element.$(
+    const tableElement = await elements[i].$(
       "div.table--Ohpzf.lobby-table-hover-4Gdj"
     );
 
-    if (tableElement) {
-      const tableOuterHTML = await tableElement.evaluate((el) => el.outerHTML);
-      console.log("Table Element:", tableOuterHTML);
-    } else {
+    if (!tableElement) {
       console.log(
         'No child element with classes "table--Ohpzf lobby-table-hover-4Gdj" found.'
       );
     }
+
+    if (nameText == "") continue;
 
     arrayOfHtmlItems.push({ name: nameText, elementSelector: tableElement });
     roomList.innerHTML += addRoom(nameText, itemsIndex, tableElement);
@@ -343,16 +345,18 @@ async function checkRooms() {
   }
 }
 
-const enterRoom = async (elementIndex) => {
+async function enterRoom(elementIndex) {
   isInsideRoom = true;
   const tableElement = arrayOfHtmlItems[elementIndex].elementSelector;
   await tableElement.click();
-  roomList.innerHTML =
-    "Sala selecionada, se deseja trocar clique no botão buscar salas";
-};
+  await page.waitForSelector(chatSelector);
+  sendChatMessagesBtn.setAttribute("disabled", "false");
+  // sendChatMessagesBtn.setAttribute("disabled", "true");
+  //
+  roomList.innerHTML = `Sala ${arrayOfHtmlItems[elementIndex].name} selecionada, se deseja trocar clique no botão buscar salas`;
+}
 
-const addMessage = (value) => {
-  console.log("value", value);
+function addMessage(value) {
   return `<div id='card-${value}' class="card mt-4">
           <header class="card-header">
             <p class="card-header-title">Mensagem</p>
@@ -367,10 +371,10 @@ const addMessage = (value) => {
             <button href="#" class="card-footer-item" onclick='deletar("${value}")'>Deletar</a>
           </footer>
         </div>`;
-};
+}
 
-const addRoom = (roomText, itemsIndex, tableElement) => {
-  return `<div id='card-${roomText}' class="card mt-4" onclick='enterRoom("${itemsIndex}")'>
+function addRoom(roomText, itemsIndex, tableElement) {
+  return `<div id='card-${roomText}' class="card mt-4 card-hover" onclick='enterRoom("${itemsIndex}")'>
                 <header class="card-header">
                   <p class="card-header-title">Sala</p>
                 </header>
@@ -380,32 +384,27 @@ const addRoom = (roomText, itemsIndex, tableElement) => {
                   </div>
                 </div>
           </div>`;
-};
+}
 
-form.addEventListener("submit", (e) => {
+form.addEventListener("submit", function (e) {
   e.preventDefault();
   const payload = new FormData(form);
   const addMessageBtn = document.getElementById("message-modal");
 
   if (editValue != "") {
-    //Editar
     console.log("Editar");
 
     for (item of payload) {
       if (arrayOfMessages.has(editValue)) {
-        // Update set
         arrayOfMessages.delete(editValue);
         arrayOfMessages.add(item[1]);
-        // Remove card
         const idCardToRemove = document.getElementById(`card-${editValue}`);
         idCardToRemove.remove();
-        // Update html
         messageList.innerHTML += addMessage(item[1]);
         editValue = "";
       }
     }
   } else {
-    // Adicionar
     for (item of payload) {
       if (arrayOfMessages.has(item[1])) break;
       arrayOfMessages.add(item[1]);
@@ -417,15 +416,9 @@ form.addEventListener("submit", (e) => {
 });
 
 function editar(valor) {
-  //const getItem = document.getElementById(`card-${valor}`);
   editValue = valor;
   const addMessageBtn = document.getElementById("message-modal");
   addMessageBtn.classList.add("is-active");
-
-  // if (arrayOfMessages.has(valor)) {
-  //   arrayOfMessages.delete("hello");
-  //   arrayOfMessages.add("hello world");
-  // }
 }
 
 function deletar(valor) {
@@ -433,5 +426,3 @@ function deletar(valor) {
   const idCardToRemove = document.getElementById(`card-${valor}`);
   idCardToRemove.remove();
 }
-
-//------PAGE HTML CONFIG------
