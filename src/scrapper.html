@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Electron App</title>
+    <title>Zé Scrapper - Home</title>
 
     <link
       rel="stylesheet"
@@ -21,8 +21,10 @@
     <script src="https://unpkg.com/bulma-toast"></script>
   </head>
   <body>
-    <h1>SCRAPPER-B1</h1>
-    <span class="mt-1">Este é um scrapper feito para plataforma b1</span>
+    <h1>ZÉ SCRAPPER</h1>
+    <span class="mt-1"
+      >Este é um scrapper feito para automação de mensagens</span
+    >
     <div id="btnContainer">
       <button
         id="startBtn"
@@ -34,13 +36,13 @@
     </div>
     <button
       id="closeBtn"
-      class="button is-danger mt-2"
+      class="button is-danger mt-1"
       onclick="shutdownPlaywright()"
     >
       Fechar Scrapper
     </button>
 
-    <div id="progress__container">
+    <div id="progress__container" class="mt-2">
       <div id="progress-bar" class="progress">
         <div id="animate-value" class="progress-value"></div>
       </div>

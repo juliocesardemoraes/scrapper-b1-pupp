@@ -7,7 +7,6 @@ const URL = "http://localhost:4000";
 
 const getData = async () => {
   const user = localStorage.getItem("user");
-  console.log("GETADATA", URL);
 
   if (user) {
     const userJson = JSON.parse(user);
@@ -23,7 +22,6 @@ const getData = async () => {
   const response = await fetch(`${URL}/playwrighturl`, requestOptions);
   const authUser = await response.json();
   localStorage.setItem("url", authUser.message);
-  console.log(authUser.message);
 };
 
 async function logar(event) {
@@ -67,44 +65,3 @@ async function logar(event) {
     }, 2000);
   }
 }
-
-async function registrar(event) {
-  event.preventDefault();
-  const formData = new FormData(formularioCadastro);
-  const name = formData.get("name");
-  const password = formData.get("password");
-
-  const newUser = JSON.stringify({
-    name: name,
-    password: password,
-  });
-
-  const requestOptions = {
-    method: "POST",
-    body: newUser,
-    headers: {
-      "Content-Type": "application/json",
-    },
-    redirect: "follow",
-  };
-
-  const response = await fetch(`${URL}/user/create`, requestOptions);
-  const authUser = await response.json();
-
-  if (response.status != 201) {
-    toast({
-      message: authUser.message,
-      type: "is-danger",
-      duration: 2000,
-    });
-  } else {
-    toast({
-      message: authUser.message,
-      type: "is-success",
-      duration: 2000,
-    });
-  }
-}
-
-// SpaceAquelino
-// @Aquelino88653361

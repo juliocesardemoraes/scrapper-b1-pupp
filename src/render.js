@@ -11,21 +11,20 @@ let editValue = "";
 const TIME_FOR_EACH_MESSAGE = 35;
 let messageLoop = false;
 let arrayOfHtmlItems = [];
+const HEADLESS_BOOLEAN = true;
 
-// SELECTORS
+// SHARED SELECTORS
 const chatSelector = ".chat-input.chat-input-layout";
 const buttonSendChatMessage = "svg.chat-controls-button__icon--DVtUL";
-const progressBar = document.getElementById("animate-value");
 
 // DOM ELEMENTS
+const progressBar = document.getElementById("animate-value");
 const sendChatMessagesBtn = document.getElementById("sendChatMessages");
 const form = document.getElementById("create-message-form");
 const messageList = document.getElementById("message-list");
 let roomList = document.getElementById("room-list");
 const checkRoomsBtn = document.getElementById("checkRooms");
 const btnContainer = document.getElementById("btnContainer");
-
-const HEADLESS_BOOLEAN = false;
 
 function getRandomValue(max) {
   return Math.floor(Math.random() * max);
@@ -175,7 +174,6 @@ async function runScrapper(e) {
     const buttonSelector =
       'a.p-ripple.p-element.btn.btn-primary.ng-tns-c85-1:has-text("Login")';
 
-    await page.screenshot({ path: "error_screenshot.png" });
     await page.waitForSelector(buttonSelector, { timeout: 15000 });
     await page.click(buttonSelector);
 
@@ -207,7 +205,7 @@ async function runScrapper(e) {
 
     if (elementExists) {
       toast({
-        message: "Conta invalida no b1bet",
+        message: "Conta invalida",
         type: "is-danger",
         duration: 2000,
       });
@@ -244,11 +242,8 @@ async function runScrapper(e) {
 
     animateProgressBar("80px", "100px");
 
-    //Retrying https://www.b1.bet/?errorCode=6
-
     const iframeHandle = await page.$("#SOSWScriptWdget > iframe");
     const src = await iframeHandle.getAttribute("src");
-    console.log("SRC", src);
     await page.goto(src);
 
     animateProgressBar("100px", "120px");
@@ -276,7 +271,6 @@ async function runScrapper(e) {
       duration: 2000,
     });
   } catch (error) {
-    console.log("ERROR", error);
     toast({
       message: "Ocorreu algum erro, tente novamente",
       type: "is-danger",
@@ -306,10 +300,12 @@ let isInsideRoom = false;
 
 async function checkRooms() {
   if (isInsideRoom) {
-    closeRoom();
+    await closeRoom();
     isInsideRoom = false;
-    return;
+    checkRoomsBtn.innerText = "Buscar salas";
+    checkRoomsBtn.classList.remove("is-danger");
   }
+  await page.waitForTimeout(1000);
 
   const elements = await page.$$("div.tables-grid__item--Jt0at");
   let itemsIndex = 0;
@@ -349,10 +345,10 @@ async function enterRoom(elementIndex) {
   isInsideRoom = true;
   const tableElement = arrayOfHtmlItems[elementIndex].elementSelector;
   await tableElement.click();
-  await page.waitForSelector(chatSelector);
-  sendChatMessagesBtn.setAttribute("disabled", "false");
-  // sendChatMessagesBtn.setAttribute("disabled", "true");
-  //
+  // await page.waitForSelector(chatSelector);
+  sendChatMessagesBtn.removeAttribute("disabled");
+  checkRoomsBtn.innerText = "Fechar sala atual";
+  checkRoomsBtn.classList.add("is-danger");
   roomList.innerHTML = `Sala ${arrayOfHtmlItems[elementIndex].name} selecionada, se deseja trocar clique no botão buscar salas`;
 }
 
@@ -392,8 +388,6 @@ form.addEventListener("submit", function (e) {
   const addMessageBtn = document.getElementById("message-modal");
 
   if (editValue != "") {
-    console.log("Editar");
-
     for (item of payload) {
       if (arrayOfMessages.has(editValue)) {
         arrayOfMessages.delete(editValue);
